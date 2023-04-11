@@ -1,149 +1,145 @@
 package com.darkedges.webauthn;
 
-import static com.google.android.gms.fido.Fido.getFido2ApiClient;
-
 import android.app.Activity;
-import android.app.PendingIntent;
+import android.os.CancellationSignal;
 import android.util.Log;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.IntentSenderRequest;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
+import androidx.credentials.CreateCredentialResponse;
+import androidx.credentials.CreatePublicKeyCredentialRequest;
+import androidx.credentials.CredentialManager;
+import androidx.credentials.CredentialManagerCallback;
+import androidx.credentials.exceptions.CreateCredentialCancellationException;
+import androidx.credentials.exceptions.CreateCredentialException;
+import androidx.credentials.exceptions.CreateCredentialInterruptedException;
+import androidx.credentials.exceptions.CreateCredentialProviderConfigurationException;
+import androidx.credentials.exceptions.CreateCredentialUnknownException;
+import androidx.credentials.exceptions.CreateCustomCredentialException;
+import androidx.credentials.exceptions.domerrors.DomError;
+import androidx.credentials.exceptions.publickeycredential.CreatePublicKeyCredentialDomException;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
-import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
-import com.google.android.gms.fido.Fido;
-import com.google.android.gms.fido.fido2.api.common.AuthenticatorErrorResponse;
-import com.google.android.gms.fido.fido2.api.common.AuthenticatorResponse;
-import com.google.android.gms.fido.fido2.api.common.PublicKeyCredential;
-import com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialCreationOptions;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
+
 
 @CapacitorPlugin(name = "WebAuthn")
 public class WebAuthnPlugin extends Plugin {
-    private WebAuthn implementation = new WebAuthn();
-    ActivityResultLauncher createCredentialIntentLauncher;
+  private final WebAuthn implementation = new WebAuthn();
+  ActivityResultLauncher createCredentialIntentLauncher;
+  private String TAG = "keypass";
+  @Override
+  public void load() {
+    super.load();
+    // Use your app or activity context to instantiate a client instance of CredentialManager.
+    implementation.setCredentialManager(CredentialManager.create(bridge.getActivity().getApplicationContext()));
+  }
 
-    @Override
-    public void load() {
-        super.load();
-        // Obtain the Fido2ApiClient instance.
-        implementation.setFido2APICLient(getFido2ApiClient(bridge.getActivity()));
-        Log.i("intent", "1a");
-        createCredentialIntentLauncher = bridge.registerForActivityResult(new ActivityResultContracts.StartIntentSenderForResult(),
-                result -> verifyResult(result));
-        Log.i("intent", "1b");
-    }
+  @PluginMethod
+  public void echo(PluginCall call) {
+    String value = call.getString("value");
+    JSObject ret = new JSObject();
+    ret.put("value", implementation.echo(value));
+    call.resolve(ret);
+  }
 
-    @PluginMethod
-    public void echo(PluginCall call) {
-        String value = call.getString("value");
-        JSObject ret = new JSObject();
-        ret.put("value", implementation.echo(value));
-        call.resolve(ret);
-    }
+  @PluginMethod
+  public void isWebAuthnAvailable(PluginCall call) {
+    JSObject ret = new JSObject();
+    ret.put("value", implementation.isWebAuthnAvailable());
+    call.resolve(ret);
+  }
 
-    @PluginMethod
-    public void isWebAuthnAvailable(PluginCall call) {
-        JSObject ret = new JSObject();
-        ret.put("value", implementation.isWebAuthnAvailable());
-        call.resolve(ret);
-    }
+  @PluginMethod
+  public void isWebAuthnAutoFillAvailable(PluginCall call) {
+    JSObject ret = new JSObject();
+    ret.put("value", implementation.isWebAuthnAutoFillAvailable());
+    call.resolve(ret);
+  }
 
-    @PluginMethod
-    public void isWebAuthnAutoFillAvailable(PluginCall call) {
-        JSObject ret = new JSObject();
-        ret.put("value", implementation.isWebAuthnAutoFillAvailable());
-        call.resolve(ret);
-    }
-
-    @PluginMethod
-    public void startRegistration(PluginCall call) {
-        try {
-            PublicKeyCredentialCreationOptions.Builder builder = new PublicKeyCredentialCreationOptions.Builder()
-                    .setUser(WebAuthnUtil.parseUser(call))
-                    .setChallenge(WebAuthnUtil.parseChallenge(call))
-                    .setParameters(WebAuthnUtil.parseParameters(call))
-                    .setTimeoutSeconds(WebAuthnUtil.parseTimeoutSeconds(call))
-                    .setAttestationConveyancePreference(WebAuthnUtil.parseAttestation(call))
-                    .setExcludeList(WebAuthnUtil.parseExcludeList(call))
-                    //.setAuthenticatorSelection(WebAuthnUtil.parseAuthenticatorSelection(call))
-                    .setRp(WebAuthnUtil.parseRp(call));
-            PublicKeyCredentialCreationOptions publicKeyCredentialCreationOptions = builder.build();
-            Log.d("intent", publicKeyCredentialCreationOptions.getAttestationConveyancePreference().toString());
-            Log.d("intent", new String(publicKeyCredentialCreationOptions.getChallenge()));
-            Log.d("intent", new String(publicKeyCredentialCreationOptions.getUser().getId()));
-            Log.d("intent", publicKeyCredentialCreationOptions.getUser().getName());
-            Log.d("intent", publicKeyCredentialCreationOptions.getUser().getDisplayName());
-            Log.d("intent: Rp.Id:   ", publicKeyCredentialCreationOptions.getRp().getId());
-            Log.d("intent: Rp.Name: ", publicKeyCredentialCreationOptions.getRp().getName());
-            Log.d("intent", "" + publicKeyCredentialCreationOptions.getParameters().get(0).getType());
-            Log.d("intent", "" + publicKeyCredentialCreationOptions.getParameters().get(0).getAlgorithm().describeContents());
-            Log.d("intent", "" + publicKeyCredentialCreationOptions.getParameters().get(1).getType());
-            Log.d("intent", "" + publicKeyCredentialCreationOptions.getParameters().get(1).getAlgorithm().describeContents());
-            Log.i("intent", "1");
-            Task result = implementation.getIntent(publicKeyCredentialCreationOptions);
-            Log.i("Intent", "2");
-            result.addOnSuccessListener(
-                    new OnSuccessListener() {
-
-                        @Override
-                        public void onSuccess(Object o) {
-                            if (o != null) {
-                                Log.i("Intent", "All good");
-                                PendingIntent pendingIntent = (PendingIntent) o;
-                                //bridge.saveCall(call);
-                                createCredentialIntentLauncher.launch(new IntentSenderRequest.Builder(pendingIntent).build());
-                            }
-                        }
-                    });
-            result.addOnFailureListener(
-                    new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Log.i("Intent", "All bad");
-                        }
-                    });
-//            bridge.saveCall(call);
-//            startActivityForResult(call, intent.getResult(), "verifyResult");
-
-            JSObject ret = new JSObject();
-            ret.put("value", false);
-            call.resolve(ret);
-        } catch (Exception e) {
-            JSObject ret = new JSObject();
-            ret.put("value", "Failed");
-            call.resolve(ret);
+  @PluginMethod
+  public void startRegistration(PluginCall call) {
+    Log.d(TAG, "startRegistration");
+    Log.d(TAG, call.getData().toString());
+    String requestJson = call.getData().toString();
+    boolean preferImmediatelyAvailableCredentials = false;
+    CreatePublicKeyCredentialRequest createPublicKeyCredentialRequest =
+      // `requestJson` contains the request in JSON format. Uses the standard
+      // WebAuthn web JSON spec.
+      // `preferImmediatelyAvailableCredentials` defines whether you prefer
+      // to only use immediately available credentials, not  hybrid credentials,
+      // to fulfill this request. This value is false by default.
+      new CreatePublicKeyCredentialRequest(
+        requestJson, preferImmediatelyAvailableCredentials);
+    Log.d(TAG, createPublicKeyCredentialRequest.getDisplayInfo().getUserDisplayName());
+    // Execute CreateCredentialRequest asynchronously to register credentials
+    // for a user account. Handle success and failure cases with the result and
+    // exceptions, respectively.
+    CancellationSignal cancellationSignal = null;
+    implementation.getCredentialManager().createCredentialAsync(
+      createPublicKeyCredentialRequest, getActivity(),
+      cancellationSignal,
+      getContext().getMainExecutor(),
+      new CredentialManagerCallback<CreateCredentialResponse, CreateCredentialException>() {
+        @Override
+        public void onResult(CreateCredentialResponse result) {
+          handleSuccessfulCreatePasskeyResult(call,result);
         }
-    }
 
-    private void verifyResult(ActivityResult activityResult) {
-        Log.i("Intent", "verifyResult");
-        Log.i("Intent", "verifyResult: "+activityResult.getResultCode());
-        Log.i("Intent", "verifyResult: "+activityResult.getData());
-        byte[] bytes = activityResult.getData().getByteArrayExtra(Fido.FIDO2_KEY_CREDENTIAL_EXTRA);
-        if (activityResult.getResultCode() != Activity.RESULT_OK) {
-            Log.i("Intent", "verifyResult: cancelled");
+        @Override
+        public void onError(CreateCredentialException e) {
+          if (e instanceof CreatePublicKeyCredentialDomException) {
+            // Handle the passkey DOM errors thrown according to the
+            // WebAuthn spec.
+            handlePasskeyError(call,"CreatePublicKeyCredentialDomException",e);
+          } else if (e instanceof CreateCredentialCancellationException) {
+            // The user intentionally canceled the operation and chose not
+            // to register the credential.
+            handlePasskeyError(call,"CreatePublicKeyCredentialDomException",e);
+          } else if (e instanceof CreateCredentialInterruptedException) {
+            // Retry-able error. Consider retrying the call.
+            handlePasskeyError(call,"CreateCredentialInterruptedException",e);
+          } else if (e instanceof CreateCredentialProviderConfigurationException) {
+            // Your app is missing the provider configuration dependency.
+            // Most likely, you're missing the
+            // "credentials-play-services-auth" module.
+            handlePasskeyError(call,"CreateCredentialProviderConfigurationException",e);
+          } else if (e instanceof CreateCredentialUnknownException) {
+            handlePasskeyError(call,"CreateCredentialUnknownException",e);
+          } else if (e instanceof CreateCustomCredentialException) {
+            // You have encountered an error from a 3rd-party SDK. If
+            // you make the API call with a request object that's a
+            // subclass of
+            // CreateCustomCredentialRequest using a 3rd-party SDK,
+            // then you should check for any custom exception type
+            // constants within that SDK to match with e.type.
+            // Otherwise, drop or log the exception.
+            handlePasskeyError(call,"CreateCustomCredentialException",e);
+          } else {
+            Log.d("passkey", "Unexpected exception type "
+              + e.getClass().getName());
+          }
         }
-        if (bytes==null) {
-            Log.i("Intent", "verifyResult: credential_error");
-        } else {
-            PublicKeyCredential credential = PublicKeyCredential.deserializeFromBytes(bytes);
-            AuthenticatorResponse response = credential.getResponse();
-            if (response instanceof AuthenticatorErrorResponse) {
-                Log.e("Intent", "verifyResult: " + ((AuthenticatorErrorResponse) response).getErrorMessage());
-            } else {
-                Log.i("Intent", "verifyResult: all good");
-            }
-        }
-    }
+      });
+
+    JSObject ret = new JSObject();
+    ret.put("value", false);
+    call.resolve(ret);
+  }
+
+  private void handlePasskeyError(PluginCall call, String type, Exception e) {
+    Log.d(TAG, type+": "+e.getMessage());
+    JSObject ret = new JSObject();
+    ret.put(TAG, type+": "+e.getMessage());
+    call.resolve(ret);
+  }
+
+  private void handleSuccessfulCreatePasskeyResult(PluginCall call,CreateCredentialResponse e) {
+    Log.d(TAG, "CreateCredentialResponse: "+e.getData());
+    JSObject ret = new JSObject();
+    ret.put(TAG, "CreateCredentialResponse: "+e.getData());
+    call.resolve(ret);
+  }
 }
