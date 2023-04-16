@@ -1,13 +1,17 @@
 import { WebPlugin } from '@capacitor/core';
-import { browserSupportsWebAuthn, browserSupportsWebAuthnAutofill, startRegistration } from '@simplewebauthn/browser';
-import { PublicKeyCredentialCreationOptionsJSON, RegistrationResponseJSON } from '@simplewebauthn/typescript-types';
+import { browserSupportsWebAuthn, browserSupportsWebAuthnAutofill, startAuthentication, startRegistration } from '@simplewebauthn/browser';
+import { AuthenticationResponseJSON, PublicKeyCredentialCreationOptionsJSON, PublicKeyCredentialRequestOptionsJSON, RegistrationResponseJSON } from '@simplewebauthn/typescript-types';
 
 import type { WebAuthnPlugin } from './definitions';
 
 export class WebAuthnWeb extends WebPlugin implements WebAuthnPlugin {
 
-  startRegistration(publicKeyCredentialCreationOptionsJSON: PublicKeyCredentialCreationOptionsJSON): Promise<RegistrationResponseJSON> {
+  async startRegistration(publicKeyCredentialCreationOptionsJSON: PublicKeyCredentialCreationOptionsJSON): Promise<RegistrationResponseJSON> {
     return startRegistration(publicKeyCredentialCreationOptionsJSON);
+  }
+
+  async startAuthentication(requestOptionsJSON: PublicKeyCredentialRequestOptionsJSON, useBrowserAutofill?: boolean): Promise<AuthenticationResponseJSON> {
+    return startAuthentication(requestOptionsJSON, useBrowserAutofill);
   }
 
   async isWebAuthnAvailable(): Promise<{ value: boolean }> {

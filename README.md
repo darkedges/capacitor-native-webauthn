@@ -16,6 +16,7 @@ npx cap sync
 * [`isWebAuthnAvailable()`](#iswebauthnavailable)
 * [`isWebAuthnAutoFillAvailable()`](#iswebauthnautofillavailable)
 * [`startRegistration(...)`](#startregistration)
+* [`startAuthentication(...)`](#startauthentication)
 * [Interfaces](#interfaces)
 * [Type Aliases](#type-aliases)
 
@@ -57,6 +58,22 @@ startRegistration(publicKeyCredentialCreationOptionsJSON: PublicKeyCredentialCre
 | **`publicKeyCredentialCreationOptionsJSON`** | <code><a href="#publickeycredentialcreationoptionsjson">PublicKeyCredentialCreationOptionsJSON</a></code> |
 
 **Returns:** <code>Promise&lt;<a href="#registrationresponsejson">RegistrationResponseJSON</a>&gt;</code>
+
+--------------------
+
+
+### startAuthentication(...)
+
+```typescript
+startAuthentication(requestOptionsJSON: PublicKeyCredentialRequestOptionsJSON, useBrowserAutofill?: boolean | undefined) => Promise<AuthenticationResponseJSON>
+```
+
+| Param                    | Type                                                                                                    |
+| ------------------------ | ------------------------------------------------------------------------------------------------------- |
+| **`requestOptionsJSON`** | <code><a href="#publickeycredentialrequestoptionsjson">PublicKeyCredentialRequestOptionsJSON</a></code> |
+| **`useBrowserAutofill`** | <code>boolean</code>                                                                                    |
+
+**Returns:** <code>Promise&lt;<a href="#authenticationresponsejson">AuthenticationResponseJSON</a>&gt;</code>
 
 --------------------
 
@@ -188,6 +205,53 @@ https://w3c.github.io/webauthn/#dictdef-publickeycredentialdescriptorjson
 | **`appid`**            | <code>string</code>  |
 | **`credProps`**        | <code>boolean</code> |
 | **`hmacCreateSecret`** | <code>boolean</code> |
+
+
+#### AuthenticationResponseJSON
+
+A slightly-modified AuthenticationCredential to simplify working with ArrayBuffers that
+are Base64URL-encoded in the browser so that they can be sent as JSON to the server.
+
+https://w3c.github.io/webauthn/#dictdef-authenticationresponsejson
+
+| Prop                          | Type                                                                                                    |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------- |
+| **`id`**                      | <code><a href="#base64urlstring">Base64URLString</a></code>                                             |
+| **`rawId`**                   | <code><a href="#base64urlstring">Base64URLString</a></code>                                             |
+| **`response`**                | <code><a href="#authenticatorassertionresponsejson">AuthenticatorAssertionResponseJSON</a></code>       |
+| **`authenticatorAttachment`** | <code><a href="#authenticatorattachment">AuthenticatorAttachment</a></code>                             |
+| **`clientExtensionResults`**  | <code><a href="#authenticationextensionsclientoutputs">AuthenticationExtensionsClientOutputs</a></code> |
+| **`type`**                    | <code><a href="#publickeycredentialtype">PublicKeyCredentialType</a></code>                             |
+
+
+#### AuthenticatorAssertionResponseJSON
+
+A slightly-modified AuthenticatorAssertionResponse to simplify working with ArrayBuffers that
+are Base64URL-encoded in the browser so that they can be sent as JSON to the server.
+
+https://w3c.github.io/webauthn/#dictdef-authenticatorassertionresponsejson
+
+| Prop                    | Type                                                        |
+| ----------------------- | ----------------------------------------------------------- |
+| **`clientDataJSON`**    | <code><a href="#base64urlstring">Base64URLString</a></code> |
+| **`authenticatorData`** | <code><a href="#base64urlstring">Base64URLString</a></code> |
+| **`signature`**         | <code><a href="#base64urlstring">Base64URLString</a></code> |
+| **`userHandle`**        | <code>string</code>                                         |
+
+
+#### PublicKeyCredentialRequestOptionsJSON
+
+A variant of PublicKeyCredentialRequestOptions suitable for JSON transmission to the browser to
+(eventually) get passed into navigator.credentials.get(...) in the browser.
+
+| Prop                   | Type                                                                                                  |
+| ---------------------- | ----------------------------------------------------------------------------------------------------- |
+| **`challenge`**        | <code><a href="#base64urlstring">Base64URLString</a></code>                                           |
+| **`timeout`**          | <code>number</code>                                                                                   |
+| **`rpId`**             | <code>string</code>                                                                                   |
+| **`allowCredentials`** | <code>PublicKeyCredentialDescriptorJSON[]</code>                                                      |
+| **`userVerification`** | <code><a href="#userverificationrequirement">UserVerificationRequirement</a></code>                   |
+| **`extensions`**       | <code><a href="#authenticationextensionsclientinputs">AuthenticationExtensionsClientInputs</a></code> |
 
 
 ### Type Aliases
