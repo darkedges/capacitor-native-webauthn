@@ -1,20 +1,14 @@
 package com.darkedges.webauthn;
 
-import android.app.PendingIntent;
 import android.util.Log;
-
-import com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialCreationOptions;
-import com.google.android.gms.tasks.Task;
-import com.google.android.gms.tasks.Tasks;
-
-import java.util.concurrent.ExecutionException;
+import androidx.credentials.CredentialManager;
 
 public class WebAuthn {
-    private com.google.android.gms.fido.fido2.Fido2ApiClient fido2ApiClient;
+    private CredentialManager credentialManager;
 
-    public void setFido2APICLient(com.google.android.gms.fido.fido2.Fido2ApiClient fido2ApiClient) {
-        Log.i("setFido2APICLient", String.valueOf(fido2ApiClient));
-        this.fido2ApiClient=fido2ApiClient;
+    public void setCredentialManager(CredentialManager credentialManager) {
+        Log.i("setCredentialManager", String.valueOf(credentialManager));
+        this.credentialManager=credentialManager;
     }
 
     public String echo(String value) {
@@ -33,13 +27,7 @@ public class WebAuthn {
         boolean val = false;
         switch(webAuthnType) {
             case WEBAUTHN:
-                try {
-                    Task task = fido2ApiClient.isUserVerifyingPlatformAuthenticatorAvailable();
-                    Tasks.await(task);
-                    val = (boolean) task.getResult();
-                } catch (Exception e) {
-                    // do nothing
-                }
+                val = false;
                 break;
             case WEBAUTHNAUTOFILL:
                 val=false;
@@ -48,12 +36,7 @@ public class WebAuthn {
         return val;
     }
 
-    public boolean startRegistration(PublicKeyCredentialCreationOptions publicKeyCredentialCreationOptions) throws ExecutionException, InterruptedException {
-        Task<PendingIntent> intent = fido2ApiClient.getRegisterPendingIntent(publicKeyCredentialCreationOptions);
-        return false;
-    }
-
-    public Task<PendingIntent> getIntent(PublicKeyCredentialCreationOptions publicKeyCredentialCreationOptions) {
-        return fido2ApiClient.getRegisterPendingIntent(publicKeyCredentialCreationOptions);
-    }
+  public CredentialManager getCredentialManager() {
+      return this.credentialManager;
+  }
 }
