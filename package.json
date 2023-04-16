@@ -1,7 +1,7 @@
 {
-  "name": "@darkedges/webauthn",
+  "name": "@darkedges/capacitor-native-passkey",
   "version": "0.0.1",
-  "description": "WebAuthn",
+  "description": "This plugin gives access to the native passkey apis for android",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
@@ -17,15 +17,16 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/darkedges/capacitor-webauthn.git"
+    "url": "git+https://github.com/darkedges/capacitor-native-passkey.git"
   },
   "bugs": {
-    "url": "https://github.com/darkedges/capacitor-webauthn/issues"
+    "url": "https://github.com/darkedges/capacitor-native-passkey/issues"
   },
   "keywords": [
     "capacitor",
     "plugin",
-    "native"
+    "native",
+    "passkey"
   ],
   "scripts": {
     "verify": "npm run verify:ios && npm run verify:android && npm run verify:web",
@@ -74,9 +75,6 @@
     "extends": "@ionic/eslint-config/recommended"
   },
   "capacitor": {
-    "ios": {
-      "src": "ios"
-    },
     "android": {
       "src": "android"
     }
