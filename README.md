@@ -1,11 +1,11 @@
-# @darkedges/webauthn
+# @darkedges/capacitor-native-passkey
 
 WebAuthn
 
 ## Install
 
 ```bash
-npm install @darkedges/webauthn
+npm install @darkedges/capacitor-native-passkey
 npx cap sync
 ```
 
