@@ -1,4 +1,4 @@
-package com.getcapacitor.android;
+package com.darkedges.capacitor.webauthn;
 
 import static org.junit.Assert.*;
 
@@ -14,7 +14,7 @@ import org.junit.runner.RunWith;
  * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
  */
 @RunWith(AndroidJUnit4.class)
-public class ExampleInstrumentedTest {
+public class WebAuthnInstrumentedTest {
 
     @Test
     public void useAppContext() throws Exception {

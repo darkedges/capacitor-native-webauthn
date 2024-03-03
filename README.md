@@ -1,11 +1,11 @@
-# @darkedges/capacitor-native-passkey
+# @darkedges/capacitor-native-webauthn
 
-WebAuthn
+PassKey
 
 ## Install
 
 ```bash
-npm install @darkedges/capacitor-native-passkey
+npm install @darkedges/capacitor-native-webauthn
 npx cap sync
 ```
 
@@ -105,11 +105,14 @@ are Base64URL-encoded in the browser so that they can be sent as JSON to the ser
 
 https://w3c.github.io/webauthn/#dictdef-authenticatorattestationresponsejson
 
-| Prop                    | Type                                                        |
-| ----------------------- | ----------------------------------------------------------- |
-| **`clientDataJSON`**    | <code><a href="#base64urlstring">Base64URLString</a></code> |
-| **`attestationObject`** | <code><a href="#base64urlstring">Base64URLString</a></code> |
-| **`transports`**        | <code>AuthenticatorTransportFuture[]</code>                 |
+| Prop                     | Type                                                                        |
+| ------------------------ | --------------------------------------------------------------------------- |
+| **`clientDataJSON`**     | <code><a href="#base64urlstring">Base64URLString</a></code>                 |
+| **`attestationObject`**  | <code><a href="#base64urlstring">Base64URLString</a></code>                 |
+| **`authenticatorData`**  | <code><a href="#base64urlstring">Base64URLString</a></code>                 |
+| **`transports`**         | <code>AuthenticatorTransportFuture[]</code>                                 |
+| **`publicKeyAlgorithm`** | <code><a href="#cosealgorithmidentifier">COSEAlgorithmIdentifier</a></code> |
+| **`publicKey`**          | <code><a href="#base64urlstring">Base64URLString</a></code>                 |
 
 
 #### AuthenticationExtensionsClientOutputs
@@ -270,7 +273,12 @@ A super class of TypeScript's `AuthenticatorTransport` that includes support for
 transports. Should eventually be replaced by TypeScript's when TypeScript gets updated to
 know about it (sometime after 4.6.3)
 
-<code>'ble' | 'internal' | 'nfc' | 'usb' | 'cable' | 'hybrid'</code>
+<code>'ble' | 'cable' | 'hybrid' | 'internal' | 'nfc' | 'smart-card' | 'usb'</code>
+
+
+#### COSEAlgorithmIdentifier
+
+<code>number</code>
 
 
 #### AuthenticatorAttachment
@@ -281,11 +289,6 @@ know about it (sometime after 4.6.3)
 #### PublicKeyCredentialType
 
 <code>"public-key"</code>
-
-
-#### COSEAlgorithmIdentifier
-
-<code>number</code>
 
 
 #### ResidentKeyRequirement

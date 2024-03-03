@@ -1,20 +1,10 @@
-package com.darkedges.webauthn;
+package com.darkedges.capacitor.webauthn;
 
 import android.util.Log;
 import androidx.credentials.CredentialManager;
 
 public class WebAuthn {
     private CredentialManager credentialManager;
-
-    public void setCredentialManager(CredentialManager credentialManager) {
-        Log.i("setCredentialManager", String.valueOf(credentialManager));
-        this.credentialManager=credentialManager;
-    }
-
-    public String echo(String value) {
-        Log.i("Echo", value);
-        return value;
-    }
 
     public boolean isWebAuthnAvailable() {
         return isAvailable(WebAuthnTypes.WEBAUTHN);
@@ -36,7 +26,12 @@ public class WebAuthn {
         return val;
     }
 
-  public CredentialManager getCredentialManager() {
-      return this.credentialManager;
-  }
+    public void setCredentialManager(CredentialManager credentialManager) {
+        Log.i("setCredentialManager", String.valueOf(credentialManager));
+        this.credentialManager=credentialManager;
+    }
+
+    public CredentialManager getCredentialManager() {
+        return this.credentialManager;
+    }
 }
