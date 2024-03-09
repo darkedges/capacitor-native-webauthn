@@ -1,4 +1,4 @@
-import { AuthenticationResponseJSON, PublicKeyCredentialCreationOptionsJSON, PublicKeyCredentialRequestOptionsJSON, RegistrationResponseJSON } from '@simplewebauthn/typescript-types';
+import { AuthenticationResponseJSON, PublicKeyCredentialCreationOptionsJSON, PublicKeyCredentialRequestOptionsJSON, RegistrationResponseJSON } from '@simplewebauthn/types';
 
 export interface WebAuthnPlugin {
   isWebAuthnAvailable(): Promise<{ value: boolean }>;
