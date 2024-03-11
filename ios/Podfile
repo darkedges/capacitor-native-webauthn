@@ -9,6 +9,7 @@ end
 
 target 'Plugin' do
   capacitor_pods
+  pod 'base64url', :git => 'https://github.com/darkedges/base64url-swift.git'
 end
 
 target 'PluginTests' do

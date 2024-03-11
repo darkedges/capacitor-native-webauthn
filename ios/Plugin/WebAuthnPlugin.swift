@@ -1,6 +1,7 @@
 import Foundation
 import Capacitor
 import AuthenticationServices
+import base64url
 
 enum Attachment: String {
     case CROSSPLATFORM = "crossplatform"
@@ -28,12 +29,20 @@ class GetAppleSignInHandler: NSObject, ASAuthorizationControllerDelegate {
     }
     
     func register() {
-        let _challenge = Data(call.getString("challenge")!.utf8)
+        let _challenge: String = call.getString("challenge")!
+        let _userid: String = call.getObject("user")?["id"] as! String
         let _username: String = call.getObject("user")?["name"] as! String
-        let _userId = Data((call.getObject("user")?["id"] as! String).utf8)
         let _rp: String = call.getObject("rp")?["id"] as! String
+        
+        let challengeData = Data(base64urlEncoded: _challenge)!
+        let useridData = Data(_userid.utf8)
+        
         let platformProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: _rp)
-        let platformKeyRequest = platformProvider.createCredentialRegistrationRequest(challenge: _challenge, name: _username, userID: _userId)
+        let platformKeyRequest = platformProvider.createCredentialRegistrationRequest(
+            challenge: challengeData,
+            name: _username,
+            userID: useridData
+        )
         let authController = ASAuthorizationController(authorizationRequests: [platformKeyRequest])
         authController.delegate = self
         authController.presentationContextProvider = self
@@ -41,10 +50,13 @@ class GetAppleSignInHandler: NSObject, ASAuthorizationControllerDelegate {
     }
     
     func authenticate() {
-        let _challenge = Data(call.getString("challenge")!.utf8)
+        let _challenge: String = call.getString("challenge")!
         let _rp: String = call.getString("rpId")!
+        
+        let challengeData = Data(base64urlEncoded: _challenge)!
+        
         let platformProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: _rp)
-        let platformKeyRequest = platformProvider.createCredentialAssertionRequest(challenge: _challenge)
+        let platformKeyRequest = platformProvider.createCredentialAssertionRequest(challenge: challengeData)
         let authController = ASAuthorizationController(authorizationRequests: [platformKeyRequest])
         authController.delegate = self
         authController.presentationContextProvider = self
@@ -60,21 +72,15 @@ class GetAppleSignInHandler: NSObject, ASAuthorizationControllerDelegate {
             
       }
     
-    func URLSafe(data: String) -> String {
-        return data.replacingOccurrences(of: "/", with: "_")
-                        .replacingOccurrences(of: "+", with: "-")
-                        .replacingOccurrences(of: "=", with: "")
-    }
-    
     func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
         switch authorization.credential {
         case let credentialRegistration as ASAuthorizationPlatformPublicKeyCredentialRegistration:
-            let attestationObject = URLSafe(data: credentialRegistration.rawAttestationObject!.base64EncodedString())
-            let id = URLSafe(data: credentialRegistration.credentialID.base64EncodedString())
-            let rawId = URLSafe(data: credentialRegistration.credentialID.base64EncodedString())
+            let id = credentialRegistration.credentialID.base64urlEncodedString()
+            let rawId = credentialRegistration.credentialID.base64urlEncodedString()
+            let attestationObject = credentialRegistration.rawAttestationObject!.base64urlEncodedString()
             let authenticatorAttachment = getAuthenticatorAttachment(attachment: credentialRegistration.attachment)
             let type = "public-key"
-            let clientDataJSON = URLSafe(data: credentialRegistration.rawClientDataJSON.base64EncodedString())
+            let clientDataJSON = credentialRegistration.rawClientDataJSON.base64urlEncodedString()
             let transports: [String] = ["internal"]
             call.resolve([
                 "rawId": rawId,
@@ -84,20 +90,18 @@ class GetAppleSignInHandler: NSObject, ASAuthorizationControllerDelegate {
                 "response": [
                     "transports": transports,
                     "clientDataJSON": clientDataJSON,
-                    "authenticatorData": attestationObject
+                    "attestationObject": attestationObject
                 ]
             ])
         case let credentialAssertion as ASAuthorizationPlatformPublicKeyCredentialAssertion:
-            print("A passkey was used to sign in: \(credentialAssertion)")
-            // Verify the below signature and clientDataJSON with your service for the given userID.
-            let id = URLSafe(data: credentialAssertion.credentialID.base64EncodedString())
-            let rawId = URLSafe(data: credentialAssertion.credentialID.base64EncodedString())
+            let id = credentialAssertion.credentialID.base64urlEncodedString()
+            let rawId = credentialAssertion.credentialID.base64urlEncodedString()
             let type = "public-key"
             let authenticatorAttachment = getAuthenticatorAttachment(attachment: credentialAssertion.attachment)
-            let clientDataJSON = URLSafe(data: credentialAssertion.rawClientDataJSON.base64EncodedString())
-            let authenticatorData = URLSafe(data: credentialAssertion.rawAuthenticatorData.base64EncodedString())
-            let signature = URLSafe(data: credentialAssertion.signature.base64EncodedString())
-            let userHandle = URLSafe(data: credentialAssertion.userID.base64EncodedString())
+            let clientDataJSON = credentialAssertion.rawClientDataJSON.base64urlEncodedString()
+            let authenticatorData = credentialAssertion.rawAuthenticatorData.base64urlEncodedString()
+            let signature = credentialAssertion.signature.base64urlEncodedString()
+            let userHandle = credentialAssertion.userID.base64urlEncodedString()
             // After the server verifies the assertion, sign in the user.
             call.resolve([
                 "rawId": rawId,

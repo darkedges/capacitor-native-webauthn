@@ -7,11 +7,23 @@ import type { WebAuthnPlugin } from './definitions';
 export class WebAuthnWeb extends WebPlugin implements WebAuthnPlugin {
 
   async startRegistration(publicKeyCredentialCreationOptionsJSON: PublicKeyCredentialCreationOptionsJSON): Promise<RegistrationResponseJSON> {
-    return startRegistration(publicKeyCredentialCreationOptionsJSON);
+    let res;
+    try {
+      res = await startRegistration(publicKeyCredentialCreationOptionsJSON);
+    } catch (error) {
+      return Promise.reject(error)
+    }
+    return Promise.resolve(res)
   }
 
   async startAuthentication(requestOptionsJSON: PublicKeyCredentialRequestOptionsJSON, useBrowserAutofill?: boolean): Promise<AuthenticationResponseJSON> {
-    return startAuthentication(requestOptionsJSON, useBrowserAutofill);
+    let res;
+    try {
+      res = await startAuthentication(requestOptionsJSON, useBrowserAutofill);
+    } catch (error) {
+      return Promise.reject(error)
+    }
+    return Promise.resolve(res)
   }
 
   async isWebAuthnAvailable(): Promise<{ value: boolean }> {
