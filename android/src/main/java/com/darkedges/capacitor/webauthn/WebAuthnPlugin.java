@@ -92,13 +92,14 @@ public class WebAuthnPlugin extends Plugin {
                             String password = ((PasswordCredential) credential).getPassword();
                             firebaseSignInWithPassword(call, id, password);
                         } else {
-                            handlePasskeyError(call, "Unexpected type of credential", new Exception(credential.getClass().getName()));
+                            Log.v("TAG", "credential: "+credential.getData());
+                            handlePasskeyError(call, "Unexpected type of credential", credential.getClass().getName());
                         }
                     }
 
                     @Override
                     public void onError(GetCredentialException e) {
-                        handlePasskeyError(call, "Sign in failed with exception", e);
+                        handlePasskeyError(call, "Sign in failed with exception", e.getMessage());
                     }
                 }
         );
@@ -131,30 +132,30 @@ public class WebAuthnPlugin extends Plugin {
                         if (e instanceof CreatePublicKeyCredentialDomException) {
                             // Handle the webauthn DOM errors thrown according to the
                             // WebAuthn spec.
-                            handlePasskeyError(call, "CreatePublicKeyCredentialDomException", e);
+                            handlePasskeyError(call, "CreatePublicKeyCredentialDomException", ((CreatePublicKeyCredentialDomException)e).getMessage());
                         } else if (e instanceof CreateCredentialCancellationException) {
                             // The user intentionally canceled the operation and chose not
                             // to register the credential.
-                            handlePasskeyError(call, "CreatePublicKeyCredentialDomException", e);
+                            handlePasskeyError(call, "CreateCredentialCancellationException", ((CreateCredentialCancellationException)e).getMessage());
                         } else if (e instanceof CreateCredentialInterruptedException) {
                             // Retry-able error. Consider retrying the call.
-                            handlePasskeyError(call, "CreateCredentialInterruptedException", e);
+                            handlePasskeyError(call, "CreateCredentialInterruptedException", ((CreateCredentialInterruptedException)e).getMessage());
                         } else if (e instanceof CreateCredentialProviderConfigurationException) {
                             // Your app is missing the provider configuration dependency.
                             // Most likely, you're missing the
                             // "credentials-play-services-auth" module.
-                            handlePasskeyError(call, "CreateCredentialProviderConfigurationException", e);
+                            handlePasskeyError(call, "CreateCredentialProviderConfigurationException", ((CreateCredentialProviderConfigurationException)e).getMessage());
                         } else if (e instanceof CreateCredentialUnknownException) {
-                            handlePasskeyError(call, "CreateCredentialUnknownException", e);
+                            handlePasskeyError(call, "CreateCredentialUnknownException", ((CreateCredentialUnknownException)e).getMessage());
                         } else {
-                            handlePasskeyError(call, "Unexpected exception type", e);
+                            handlePasskeyError(call, "Unexpected exception type", e.getMessage());
                         }
                     }
                 });
     }
 
     private void firebaseSignInWithPassword(PluginCall call, String id, String password) {
-        handlePasskeyError(call, "Unexpected type of credential", new Exception("Firebase Credentials found."));
+        handlePasskeyError(call, "Unexpected type of credential", "Firebase Credentials found.");
     }
 
     private void fidoAuthenticateToServer(PluginCall call, String responseJson) {
@@ -167,17 +168,16 @@ public class WebAuthnPlugin extends Plugin {
         call.resolve(ret);
     }
 
-    private void handlePasskeyError(PluginCall call, String type, Exception e) {
+    private void handlePasskeyError(PluginCall call, String type, String e) {
         JSObject ret = new JSObject();
-        ret.put(type, e.getMessage());
-        call.reject(type, ret);
+        ret.put(type, e);
+        call.reject(e, ret);
     }
 
     //  @SuppressLint("RestrictedApi")
     private void handleSuccessfulCreatePasskeyResult(PluginCall call, CreateCredentialResponse createCredentialResponse) {
         JSObject ret = null;
         try {
-            Log.v("TAF", "createCredentialResponse: " + createCredentialResponse);
             ret = new JSObject(createCredentialResponse.getData().getString("androidx.credentials.BUNDLE_KEY_REGISTRATION_RESPONSE_JSON"));
         } catch (JSONException e) {
             call.reject("Failed to get webauthn", e);
